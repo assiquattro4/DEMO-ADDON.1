@@ -1,0 +1,47 @@
+{
+  "type": "create:sequenced_assembly",
+  "ingredient": {
+    "item": "create:track" 
+  },
+  "transitionalItem": {
+    "item": "create:track"
+  },
+  "sequence": [
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "create:track"
+        },
+        {
+          "item": "minecraft:redstone"
+        }
+      ],
+      "results": [
+        {
+          "item": "create:track"
+        }
+      ]
+    },
+    {
+      "type": "create:pressing",
+      "ingredients": [
+        {
+          "item": "create:track"
+        }
+      ],
+      "results": [
+        {
+          "item": "create:track"
+        }
+      ]
+    }
+  ],
+  "results": [
+    {
+      "item": "examplemod:item_demo",
+      "count": 1
+    }
+  ],
+  "loops": 1
+}
