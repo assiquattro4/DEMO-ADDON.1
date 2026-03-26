@@ -1,0 +1,61 @@
+package net.examplemod.block;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import com.simibubi.create.content.trains.entity.CarriageEntity;
+
+public class SpeedSensingTrackBlock extends Block {
+    // Proprietà per la Redstone/Luce (0-15)
+    public static final IntegerProperty LEVEL = IntegerProperty.create("level", 0, 15);
+
+    public SpeedSensingTrackBlock(Properties properties) {
+        super(properties.lightLevel(state -> state.getValue(LEVEL)));
+        this.registerDefaultState(this.stateDefinition.any().setValue(LEVEL, 0));
+    }
+
+   @Override
+public void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
+    if (!level.isClientSide) {
+        // CONTROLLO REDSTONE: Il blocco è alimentato?
+        boolean isPowered = level.hasNeighborSignal(pos);
+
+        if (isPowered && entity instanceof CarriageEntity carriage) {
+            // Se c'è Redstone, calcoliamo la velocità
+            double speed = Math.abs(carriage.getCarriage().train.speed);
+            int newPower;
+
+            if (speed <= 0.05) {
+                newPower = 1; // Treno fermo sotto tensione
+            } else {
+                newPower = (int) Math.min(15, 2 + (speed * 26)); // Treno in movimento
+            }
+
+            if (state.getValue(LEVEL) != newPower) {
+                level.setBlock(pos, state.setValue(LEVEL, newPower), 3);
+            }
+            level.scheduleTick(pos, this, 20);
+        } else if (!isPowered && state.getValue(LEVEL) > 0) {
+            // Se la Redstone viene tolta, spegniamo subito il livello
+            level.setBlock(pos, state.setValue(LEVEL, 0), 3);
+        }
+    }
+}
+
+    @Override
+    public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        // Se non passa più nulla, spegniamo il sensore
+        level.setBlock(pos, state.setValue(LEVEL, 0), 3);
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(LEVEL);
+    }
+}
